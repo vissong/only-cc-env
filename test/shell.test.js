@@ -21,14 +21,22 @@ describe('generateEnvFile', () => {
     assert.ok(result.includes('set -gx ANTHROPIC_BASE_URL "https://example.com"'));
   });
 
-  it('should skip empty values', () => {
+  it('should unset empty values when allKeys provided', () => {
+    const allKeys = ['ANTHROPIC_AUTH_TOKEN', 'ANTHROPIC_BASE_URL', 'ANTHROPIC_MODEL'];
     const result = generateEnvFile('bash', {
       ANTHROPIC_AUTH_TOKEN: 'sk-test',
-      ANTHROPIC_BASE_URL: '',
-      ANTHROPIC_MODEL: null,
-    });
-    assert.ok(result.includes('ANTHROPIC_AUTH_TOKEN'));
-    assert.ok(!result.includes('ANTHROPIC_BASE_URL'));
-    assert.ok(!result.includes('ANTHROPIC_MODEL'));
+    }, allKeys);
+    assert.ok(result.includes('export ANTHROPIC_AUTH_TOKEN="sk-test"'));
+    assert.ok(result.includes('unset ANTHROPIC_BASE_URL'));
+    assert.ok(result.includes('unset ANTHROPIC_MODEL'));
+  });
+
+  it('should unset with set -e in fish', () => {
+    const allKeys = ['ANTHROPIC_AUTH_TOKEN', 'ANTHROPIC_BASE_URL'];
+    const result = generateEnvFile('fish', {
+      ANTHROPIC_AUTH_TOKEN: 'sk-test',
+    }, allKeys);
+    assert.ok(result.includes('set -gx ANTHROPIC_AUTH_TOKEN "sk-test"'));
+    assert.ok(result.includes('set -e ANTHROPIC_BASE_URL'));
   });
 });

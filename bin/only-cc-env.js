@@ -22,10 +22,12 @@ import {
   detectShell,
   writeEnvFile,
   addSourceLine,
+  removeSourceLine,
   getShellRcFile,
 } from '../lib/shell.js';
 import { ensureConfigDirs } from '../lib/config.js';
 import { detectOfficialAccount, getOfficialName, isOfficialName } from '../lib/official.js';
+import { getCompletionScript, installCompletion, uninstallCompletion } from '../lib/completion.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'));
@@ -310,25 +312,14 @@ program
         }
         // Clear env vars to fall back to official account
         setActiveProvider(name, { skipCheck: true });
-        const result = clearProviderEnv();
-        console.log(chalk.green(`Switched to official account (${official.email}).`));
-        console.log(chalk.dim(`Env file cleared: ${result.envFile}`));
-        console.log();
-        console.log(chalk.yellow('Run the following to apply in current session:'));
-        console.log(chalk.cyan(`  source ${result.envFile}`));
+        clearProviderEnv();
+        console.log(chalk.green(`Switched to official account${official.email ? ` (${official.email})` : ''}.`));
         return;
       }
 
       setActiveProvider(name);
-      const result = applyProvider(name);
+      applyProvider(name);
       console.log(chalk.green(`Switched to provider "${name}".`));
-      console.log(chalk.dim(`Env file written: ${result.envFile}`));
-      if (!result.alreadyPresent) {
-        console.log(chalk.dim(`Source line added to: ${result.rcFile}`));
-      }
-      console.log();
-      console.log(chalk.yellow('Run the following to apply in current session:'));
-      console.log(chalk.cyan(`  source ${result.envFile}`));
     } catch (err) {
       console.error(chalk.red(`Error: ${err.message}`));
       process.exit(1);
@@ -387,13 +378,18 @@ program
 
       console.log(chalk.dim(`Detected shell: ${shell}`));
 
-      const rcFile = getShellRcFile(shell);
-      const { alreadyPresent } = addSourceLine(shell);
+      // Remove old config first to ensure upgrade works
+      removeSourceLine(shell);
+      uninstallCompletion(shell);
 
-      if (alreadyPresent) {
-        console.log(chalk.dim(`Shell integration already configured in ${rcFile}`));
-      } else {
-        console.log(chalk.green(`Shell integration added to ${rcFile}`));
+      const rcFile = getShellRcFile(shell);
+      addSourceLine(shell);
+      console.log(chalk.green(`Shell integration configured in ${rcFile}`));
+
+      // Install completion
+      const compResult = installCompletion(shell);
+      if (compResult) {
+        console.log(chalk.green(`Completion installed: ${compResult.file}`));
       }
 
       console.log(chalk.green('Initialized successfully.'));
@@ -401,6 +397,49 @@ program
       console.log(chalk.dim('Next steps:'));
       console.log(chalk.dim('  1. only-cc-env add <provider-name> -i'));
       console.log(chalk.dim('  2. only-cc-env use <provider-name>'));
+    } catch (err) {
+      console.error(chalk.red(`Error: ${err.message}`));
+      process.exit(1);
+    }
+  });
+
+// --- __complete (hidden) ---
+program
+  .command('__complete', { hidden: true })
+  .description('Output provider names for shell completion')
+  .action(() => {
+    try {
+      const official = detectOfficialAccount();
+      if (official.loggedIn) {
+        console.log(getOfficialName());
+      }
+      const providers = listProviders();
+      for (const p of providers) {
+        console.log(p.name);
+      }
+    } catch {
+      // silent
+    }
+  });
+
+// --- completion ---
+program
+  .command('completion')
+  .description('Generate shell completion script')
+  .option('-s, --shell <shell>', 'Shell type (zsh, bash, fish)')
+  .action((options) => {
+    try {
+      const shell = options.shell || detectShell();
+      if (!shell) {
+        console.error(chalk.red('Error: Could not detect shell. Use --shell to specify.'));
+        process.exit(1);
+      }
+      const script = getCompletionScript(shell);
+      if (!script) {
+        console.error(chalk.red(`Error: Unsupported shell: ${shell}`));
+        process.exit(1);
+      }
+      process.stdout.write(script);
     } catch (err) {
       console.error(chalk.red(`Error: ${err.message}`));
       process.exit(1);
@@ -421,7 +460,8 @@ function clearProviderEnv() {
   }
 
   // Write an env file that unsets all managed variables
-  const envFile = writeEnvFile(shell, {});
+  const allKeys = getEnvKeys();
+  const envFile = writeEnvFile(shell, {}, allKeys);
   const { rcFile, alreadyPresent } = addSourceLine(shell);
 
   return { envFile, rcFile, alreadyPresent };
@@ -438,14 +478,15 @@ function applyProvider(name) {
     throw new Error('Could not detect shell (supported: zsh, bash, fish)');
   }
 
+  const allKeys = getEnvKeys();
   const envVars = {};
-  for (const key of getEnvKeys()) {
+  for (const key of allKeys) {
     if (data[key]) {
       envVars[key] = data[key];
     }
   }
 
-  const envFile = writeEnvFile(shell, envVars);
+  const envFile = writeEnvFile(shell, envVars, allKeys);
   const { rcFile, alreadyPresent } = addSourceLine(shell);
 
   return { envFile, rcFile, alreadyPresent };
