@@ -39,11 +39,8 @@ only-cc-env add kimi
 # ANTHROPIC_MODEL (optional):
 # ...
 
-# 3. Switch to that provider
+# 3. Switch to that provider (env vars apply automatically)
 only-cc-env use kimi
-
-# 4. Apply in current session
-source ~/.config/only-cc-env/env.sh
 ```
 
 ## Commands
@@ -90,7 +87,7 @@ Show provider details. Defaults to the active provider. Sensitive values are mas
 
 ### `use <name>`
 
-Switch the active provider. You need to `source` the env file or open a new terminal for changes to take effect in the current session.
+Switch the active provider. Thanks to the shell wrapper function installed by `init`, environment variables take effect immediately in the current session.
 
 `use official` clears all custom environment variables, falling back to the official Claude account.
 
@@ -100,6 +97,8 @@ Remove a provider. Use `-y` to skip confirmation.
 
 ## Managed Environment Variables
 
+The following predefined variables are prompted during interactive `add`:
+
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `ANTHROPIC_AUTH_TOKEN` | Yes | API authentication token |
@@ -108,6 +107,20 @@ Remove a provider. Use `-y` to skip confirmation.
 | `ANTHROPIC_DEFAULT_SONNET_MODEL` | No | Default Sonnet model |
 | `ANTHROPIC_DEFAULT_OPUS_MODEL` | No | Default Opus model |
 | `ANTHROPIC_DEFAULT_HAIKU_MODEL` | No | Default Haiku model |
+
+### Custom Environment Variables
+
+Beyond the predefined variables above, you can edit `~/.config/only-cc-env/providers/<name>.json` directly to add any custom environment variables:
+
+```json
+{
+  "ANTHROPIC_AUTH_TOKEN": "sk-xxx",
+  "ANTHROPIC_BASE_URL": "https://api.example.com",
+  "MY_CUSTOM_VAR": "some-value"
+}
+```
+
+When switching with `use`, all fields in the JSON are exported as environment variables. When switching to another provider or `official`, the previous provider's custom variables are automatically `unset`.
 
 ## Config File Locations
 

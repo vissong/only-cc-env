@@ -39,11 +39,8 @@ only-cc-env add kimi
 # ANTHROPIC_MODEL (optional):
 # ...
 
-# 3. 切换到该供应商
+# 3. 切换到该供应商（环境变量自动生效）
 only-cc-env use kimi
-
-# 4. 在当前终端生效
-source ~/.config/only-cc-env/env.sh
 ```
 
 ## 命令
@@ -90,7 +87,7 @@ only-cc-env add my-provider \
 
 ### `use <name>`
 
-切换当前激活的供应商。切换后需要 `source` 环境变量文件或开启新终端才能在当前会话中生效。
+切换当前激活的供应商。通过 `init` 注入的 shell 包装函数，切换后环境变量会在当前会话中自动生效。
 
 `use official` 会清除所有自定义环境变量，回退到 Claude 官方账号。
 
@@ -100,6 +97,8 @@ only-cc-env add my-provider \
 
 ## 管理的环境变量
 
+交互式添加供应商时，会提示以下预定义变量：
+
 | 变量 | 必填 | 说明 |
 |------|------|------|
 | `ANTHROPIC_AUTH_TOKEN` | 是 | API 认证令牌 |
@@ -108,6 +107,20 @@ only-cc-env add my-provider \
 | `ANTHROPIC_DEFAULT_SONNET_MODEL` | 否 | 默认 Sonnet 模型 |
 | `ANTHROPIC_DEFAULT_OPUS_MODEL` | 否 | 默认 Opus 模型 |
 | `ANTHROPIC_DEFAULT_HAIKU_MODEL` | 否 | 默认 Haiku 模型 |
+
+### 自定义环境变量
+
+除了上述预定义变量外，你可以直接编辑 `~/.config/only-cc-env/providers/<name>.json`，添加任意自定义环境变量：
+
+```json
+{
+  "ANTHROPIC_AUTH_TOKEN": "sk-xxx",
+  "ANTHROPIC_BASE_URL": "https://api.example.com",
+  "MY_CUSTOM_VAR": "some-value"
+}
+```
+
+`use` 切换时，JSON 中的所有字段都会写入环境变量。切换到其他供应商或 `official` 时，前一个供应商的自定义变量会被自动 `unset`。
 
 ## 配置文件位置
 

@@ -282,13 +282,16 @@ program
       console.log(chalk.bold(targetName) + (isActive ? chalk.green(' (active)') : ''));
       console.log();
 
-      const keys = getEnvKeys();
-      for (const key of keys) {
+      // Show predefined keys first, then any custom keys
+      const predefined = getEnvKeys();
+      const custom = Object.keys(data).filter(k => !predefined.includes(k));
+      const allKeys = [...predefined, ...custom];
+      for (const key of allKeys) {
         const value = data[key];
         if (value) {
           const display = options.unmask ? value : maskValue(value);
           console.log(`  ${chalk.dim(key + ':')} ${display}`);
-        } else {
+        } else if (predefined.includes(key)) {
           console.log(`  ${chalk.dim(key + ':')} ${chalk.dim('-')}`);
         }
       }
@@ -453,14 +456,23 @@ function maskValue(value) {
   return value.slice(0, 4) + '****' + value.slice(-4);
 }
 
+function getAllKnownKeys() {
+  const keys = new Set(getEnvKeys());
+  for (const p of listProviders()) {
+    for (const key of Object.keys(p)) {
+      if (key !== 'name') keys.add(key);
+    }
+  }
+  return [...keys];
+}
+
 function clearProviderEnv() {
   const shell = detectShell();
   if (!shell) {
     throw new Error('Could not detect shell (supported: zsh, bash, fish)');
   }
 
-  // Write an env file that unsets all managed variables
-  const allKeys = getEnvKeys();
+  const allKeys = getAllKnownKeys();
   const envFile = writeEnvFile(shell, {}, allKeys);
   const { rcFile, alreadyPresent } = addSourceLine(shell);
 
@@ -478,9 +490,9 @@ function applyProvider(name) {
     throw new Error('Could not detect shell (supported: zsh, bash, fish)');
   }
 
-  const allKeys = getEnvKeys();
+  const allKeys = getAllKnownKeys();
   const envVars = {};
-  for (const key of allKeys) {
+  for (const key of Object.keys(data)) {
     if (data[key]) {
       envVars[key] = data[key];
     }
