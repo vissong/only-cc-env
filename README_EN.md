@@ -23,7 +23,7 @@ It does not touch `~/.claude/`, Claude's settings, authentication, or session da
 ## Install
 
 ```bash
-npm install -g only-cc-env
+npm install -g only-cc-env --registry https://registry.npmjs.org
 ```
 
 ## Quick Start
