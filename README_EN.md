@@ -26,21 +26,23 @@ It does not touch `~/.claude/`, Claude's settings, authentication, or session da
 npm install -g only-cc-env --registry https://registry.npmjs.org
 ```
 
+After installation, both `only-cc-env` and the short alias `ccenv` are available — they are identical. The examples below use `ccenv`, but you can use `only-cc-env` interchangeably.
+
 ## Quick Start
 
 ```bash
 # 1. Initialize (detect shell and set up auto-loading)
-only-cc-env init
+ccenv init
 
 # 2. Add a provider (interactive)
-only-cc-env add kimi
+ccenv add kimi
 # ANTHROPIC_AUTH_TOKEN *: sk-xxx
 # ANTHROPIC_BASE_URL *: https://api.kimi.com/coding/
 # ANTHROPIC_MODEL (optional):
 # ...
 
 # 3. Switch to that provider (env vars apply automatically)
-only-cc-env use kimi
+ccenv use kimi
 ```
 
 ## Commands

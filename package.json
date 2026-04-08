@@ -4,10 +4,12 @@
   "description": "Manage multiple Anthropic/Claude API provider environments",
   "type": "module",
   "bin": {
-    "only-cc-env": "./bin/only-cc-env.js"
+    "only-cc-env": "./bin/only-cc-env.js",
+    "ccenv": "./bin/only-cc-env.js"
   },
   "scripts": {
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "postinstall": "node scripts/postinstall.js"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -33,6 +35,7 @@
   "files": [
     "bin/",
     "lib/",
+    "scripts/postinstall.js",
     "README.md",
     "README_EN.md"
   ]
