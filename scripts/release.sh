@@ -24,6 +24,12 @@ if [[ "$BRANCH" != "main" ]]; then
   exit 1
 fi
 
+# Ensure npm is logged in
+if ! npm whoami --registry https://registry.npmjs.org &>/dev/null; then
+  echo "Error: Not logged in to npm. Run 'npm login --registry https://registry.npmjs.org' first."
+  exit 1
+fi
+
 # Run tests
 echo "Running tests..."
 npm test
