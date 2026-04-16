@@ -406,6 +406,28 @@ program
     }
   });
 
+// --- uninit ---
+program
+  .command('uninit')
+  .description('Remove shell integration added by init')
+  .action(() => {
+    try {
+      const shell = detectShell();
+      if (!shell) {
+        console.error(chalk.red('Error: Could not detect shell (supported: zsh, bash, fish).'));
+        process.exit(1);
+      }
+
+      const rcFile = getShellRcFile(shell);
+      removeSourceLine(shell);
+      uninstallCompletion(shell);
+      console.log(chalk.green(`Shell integration removed from ${rcFile}`));
+    } catch (err) {
+      console.error(chalk.red(`Error: ${err.message}`));
+      process.exit(1);
+    }
+  });
+
 // --- __complete (hidden) ---
 program
   .command('__complete', { hidden: true })

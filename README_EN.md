@@ -135,6 +135,24 @@ When switching with `use`, all fields in the JSON are exported as environment va
 └── env.sh              # Generated env file (or env.fish)
 ```
 
+## Local Development
+
+```bash
+# Install dependencies
+npm install
+
+# Run the entry file directly
+node bin/only-cc-env.js list
+
+# Or use npm link to create a global symlink
+npm link
+ccenv list
+# Clean up when done: npm unlink -g only-cc-env
+
+# Run tests
+npm test
+```
+
 ## License
 
 MIT

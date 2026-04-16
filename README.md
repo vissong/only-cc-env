@@ -135,6 +135,24 @@ only-cc-env add my-provider \
 └── env.sh              # 生成的环境变量文件（或 env.fish）
 ```
 
+## 本地开发调试
+
+```bash
+# 安装依赖
+npm install
+
+# 直接运行入口文件
+node bin/only-cc-env.js list
+
+# 或者用 npm link 创建全局软链后用命令名调试
+npm link
+ccenv list
+# 调试完后清理：npm unlink -g only-cc-env
+
+# 运行测试
+npm test
+```
+
 ## License
 
 MIT
